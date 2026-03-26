@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Commit keymap changes, wait for GitHub Actions build, push .uf2 files to phone.
+# Usage: bin/sync-to-phone ["commit message"]
+#   No message = skip commit, just grab latest build and push to phone
+
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO="ruoyul/Adv360-Pro-ZMK"
+PHONE_DIR="/sdcard/Download/adv360"
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+cd "$REPO_DIR"
+
+# Commit + push if a message was provided
+if [[ $# -gt 0 ]]; then
+  git add config/adv360.keymap
+  git commit -m "$1"
+  git push origin V3.0
+  echo "→ Pushed. Waiting for Actions build..."
+fi
+
+# Find the latest run on V3.0 and wait for it
+RUN_ID=$(gh run list --repo "$REPO" --branch V3.0 --limit 1 --json databaseId -q '.[0].databaseId')
+echo "→ Watching run $RUN_ID"
+gh run watch "$RUN_ID" --repo "$REPO" --exit-status
+
+# Download the clique artifact
+echo "→ Downloading firmware-clique"
+gh run download "$RUN_ID" --repo "$REPO" --name firmware-clique --dir "$TMP_DIR"
+
+# Find the two .uf2 files
+LEFT=$(find "$TMP_DIR" -name '*left*.uf2' | head -1)
+RIGHT=$(find "$TMP_DIR" -name '*right*.uf2' | head -1)
+[[ -z "$LEFT" || -z "$RIGHT" ]] && { echo "✗ Couldn't find left/right .uf2 files"; exit 1; }
+
+# Push to phone
+echo "→ Pushing to phone at $PHONE_DIR"
+adb shell mkdir -p "$PHONE_DIR"
+adb push "$LEFT" "$PHONE_DIR/left.uf2"
+adb push "$RIGHT" "$PHONE_DIR/right.uf2"
+
+echo
+echo "✓ Files on phone at $PHONE_DIR"
+echo "  Next: unplug phone from laptop → plug into keyboard → open Adv360 Flasher app"
