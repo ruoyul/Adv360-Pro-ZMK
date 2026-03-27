@@ -21,8 +21,15 @@ if [[ $# -gt 0 ]]; then
   echo "→ Pushed. Waiting for Actions build..."
 fi
 
-# Find the latest run on V3.0 and wait for it
-RUN_ID=$(gh run list --repo "$REPO" --branch V3.0 --limit 1 --json databaseId -q '.[0].databaseId')
+# Find the run matching current HEAD (not just latest, which might be the previous commit)
+HEAD_SHA=$(git rev-parse HEAD)
+echo "→ Looking for run on $HEAD_SHA"
+for _ in {1..30}; do
+  RUN_ID=$(gh run list --repo "$REPO" --branch V3.0 --commit "$HEAD_SHA" --limit 1 --json databaseId -q '.[0].databaseId')
+  [[ -n "$RUN_ID" ]] && break
+  sleep 2
+done
+[[ -z "$RUN_ID" ]] && { echo "✗ No run found for $HEAD_SHA after 60s"; exit 1; }
 echo "→ Watching run $RUN_ID"
 gh run watch "$RUN_ID" --repo "$REPO" --exit-status
 
