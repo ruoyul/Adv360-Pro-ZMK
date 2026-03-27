@@ -7,7 +7,7 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO="ruoyul/Adv360-Pro-ZMK"
-PHONE_DIR="/sdcard/Download/adv360"
+PHONE_DIR="/sdcard/Android/data/com.roy.adv360flasher/files"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
