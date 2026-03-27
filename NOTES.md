@@ -4,31 +4,17 @@ Personal notes on ZMK features to explore. Ordered by impact.
 
 ## Current state
 
-Commit `2e113ff` has:
 - Mac modifier layout on thumb cluster (Cmd/Opt/Ctrl/Cmd matching keycap legends)
 - Up/down arrow swap
 - Delete key → Left Control
+- Hyper key: hold right-inner thumb (Cmd legend) = Shift+Ctrl+Opt+Cmd
+- Caps Word: tap the Caps key (bottom row, between `` ` `` and `←`), next word
+  is ALL_CAPS, auto-exits on space
+- Nav layer: hold Space → HJKL = arrows, YUIO = Home/PgDn/PgUp/End
 
 ## Features to explore
 
-### 1. Caps Word (easiest win, ~5 min)
-
-Replace Caps Lock with `&caps_word`. Tap it, next word is ALL_CAPS, auto-exits on
-space. Great for `CONSTANT_NAMES` in code.
-
-**Where:** `config/adv360.keymap` line 35/45, change `&kp CAPS` → `&caps_word`
-
-### 2. Navigation layer (medium effort, big payoff)
-
-Hold a thumb key → HJKL become arrows, plus Home/End/PgUp/PgDn nearby. Never
-reach for the arrow row.
-
-**Which key:** Space as layer-tap (`&lt NAV SPACE` — tap=space, hold=nav layer).
-Or use one of the unused hotkeys (circled 1/2/3/4 in inner columns).
-
-**How:** Add a new layer block in the keymap, bind the hold key with `&lt`.
-
-### 3. Home row mods (biggest change, real learning curve)
+### 1. Home row mods (biggest change, real learning curve)
 
 Tap F = f, hold F = Cmd. Same for A/S/D/J/K/L/; with Shift/Ctrl/Opt/Cmd.
 Modifiers without leaving home position.
@@ -42,7 +28,7 @@ Modifiers without leaving home position.
 **How:** `&hm LGUI F` style bindings. The `hm` behavior is already defined in
 the keymap (lines 14-22), just needs to be used.
 
-### 4. Combos
+### 2. Combos
 
 Press two keys together → third action. Common: J+K = Esc, D+F = Tab.
 
@@ -63,8 +49,14 @@ hit rating. Home row keys are already most-used; adding mod duty replaces
 reaches to dedicated modifiers, doesn't add net keystrokes. Keycap shine
 happens first and is cosmetic.
 
-## Workflow reminder
+## Workflow
 
-Edit `config/adv360.keymap` → commit → push → GitHub Actions builds → download
-`firmware-clique` artifact → flash both halves (Mod+Hotkey1 for left,
-Mod+Hotkey3 for right, or paperclip pinhole in thumb cluster).
+Run `bin/sync-to-phone "commit message"` — commits, pushes, waits for Actions,
+downloads the artifact, pushes `.uf2` files to the Android phone. Then unplug
+phone → plug into keyboard → open Adv360 Flasher app → tap Flash Left/Right.
+
+Bootloader: Mod+Hotkey1 (left) / Mod+Hotkey3 (right), or paperclip pinhole
+in the thumb cluster gap (left: between Delete/Home/End; right: between
+PgUp/Enter/PgDn).
+
+Companion app source: `~/code/adv360-flasher`
